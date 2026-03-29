@@ -1,22 +1,23 @@
 <#
 .SYNOPSIS
-Reduce imagenes y rehace PDFs usando componentes nativos de Windows.
+Reduce imagenes y rehace PDFs con componentes nativos de Windows.
 
 .DESCRIPTION
-Procesa imagenes y PDFs desde PowerShell, por arrastrar y soltar sobre un EXE
-empaquetado o abriendo un selector cuando no se pasan rutas.
+FormatCore sirve para dos cosas: bajar el peso de imagenes y rehacer PDFs en
+Windows sin depender de PDF24 ni QPDF.
 
-La ruta PDF actual no usa PDF24 ni QPDF. Usa Windows.Data.Pdf para renderizar
-cada pagina del PDF a JPEG y despues reconstruye un PDF nuevo.
+Con imagenes se comporta como una herramienta normal de reduccion y
+conversion. Con PDF hay una limitacion importante: no toca la estructura
+interna del archivo. Cada pagina se renderiza como imagen y luego se monta un
+PDF nuevo.
 
-Consecuencias de este enfoque:
-- el PDF no se comprime de forma estructural; se rasteriza y se reconstruye
-- se pierde texto seleccionable y busqueda
-- se pierden vectoriales, capas y contenido nativo del PDF
-- algunos PDFs de texto o vector pueden crecer en tamano
+Eso suele ir mejor con PDFs escaneados que con documentos de texto o
+vectoriales. En los PDFs reconstruidos se puede perder texto seleccionable,
+busqueda, capas y elementos nativos del original. En algunos casos el archivo
+puede incluso crecer.
 
-Si el PDF rasterizado sigue superando el umbral, el script intenta dividirlo en
-varias partes.
+Si el script recibe rutas, las procesa directamente. Si no recibe ninguna,
+abre un cuadro para elegir archivos.
 
 .PARAMETER Files
 Lista de archivos o carpetas a procesar. Si se pasan carpetas, por defecto solo
@@ -52,7 +53,8 @@ Sobrescribe resultados existentes en lugar de crear un sufijo incremental.
 Carpeta de salida opcional. Si no se indica, se usa la carpeta del archivo de entrada.
 
 .PARAMETER PDFSplitMarginPercent
-Margen aplicado al objetivo efectivo por parte al dividir PDFs.
+Hace mas conservador o mas agresivo el troceado de PDFs. Cuanto mas bajo sea,
+menos paginas intentara meter en cada parte.
 
 .PARAMETER PdfMode
 Controla el tratamiento de PDFs: Raster, Skip o Auto.
@@ -64,16 +66,19 @@ Procesa tambien subcarpetas cuando se pasan directorios de entrada.
 Guarda un transcript de la ejecucion en un archivo de log.
 
 .PARAMETER KeepTransparency
-Si la imagen tiene transparencia, evita acabar en JPEG y fuerza una salida compatible.
+Si la imagen tiene transparencia, evita acabar en JPEG y fuerza una salida
+compatible.
 
 .NOTES
-Archivo actual: FormatCore.ps1
-PDFs: requieren Windows.Data.Pdf disponible en Windows.
-HEIC: depende del codec instalado en el sistema. Si el codec no esta presente,
-el archivo puede no abrirse con System.Drawing.
-Si ya existe un resultado con ese nombre, por defecto se crea un sufijo incremental.
-Si una imagen procesada no mejora el tamano original, por defecto se descarta.
-Si `PdfMode=Auto`, el script intenta estimar si un PDF va a crecer antes de rasterizarlo.
+Este script esta pensado para Windows PowerShell 5.1.
+Los PDFs dependen de Windows.Data.Pdf disponible en el sistema.
+HEIC solo funciona si Windows tiene el codec instalado.
+Si ya existe un resultado con ese nombre, por defecto se crea un sufijo
+incremental.
+Si una imagen o un PDF procesado no mejoran, por defecto no se conservan,
+salvo que se use -KeepLargerOutput.
+Si `PdfMode=Auto`, el script hace una estimacion previa para evitar rasterizar
+PDFs que probablemente vayan a crecer.
 
 .EXAMPLE
 powershell -ExecutionPolicy Bypass -File .\FormatCore.ps1 "C:\Docs\informe.pdf" "C:\Docs\foto.png"
