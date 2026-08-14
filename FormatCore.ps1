@@ -91,7 +91,7 @@ powershell -ExecutionPolicy Bypass -File .\FormatCore.ps1
 param(
     [Parameter(Position = 0)]
     [string[]]$Files,
-    [ValidateRange(1024, 2147483647)][int]$Threshold = 1048576,
+    [ValidateRange(1024, 8796093022208)][long]$Threshold = 1048576,
     [ValidateRange(1, 100)][int]$Quality = 80,
     [ValidateRange(1, 12000)][int]$MaxWidth = 1920,
     [ValidateRange(1, 12000)][int]$MaxHeight = 1080,
@@ -537,7 +537,7 @@ function Compress-ImageNative {
         [int]$Quality = 80,
         [int]$MaxWidth = 1920,
         [int]$MaxHeight = 1080,
-        [int]$Threshold = 1048576,
+        [long]$Threshold = 1048576,
         [switch]$AllowJpegFallback,
         [bool]$HasTransparency = $false
     )
@@ -826,7 +826,7 @@ function Measure-PDFChunkActual {
 }
 
 function Split-PDFByThreshold {
-    param([string]$InputPDF,[string]$BaseOutputName,[string]$OutputDir,[int]$Threshold = 1048576,[int]$RenderDPI = 150,[int]$JpegQuality = 80)
+    param([string]$InputPDF,[string]$BaseOutputName,[string]$OutputDir,[long]$Threshold = 1048576,[int]$RenderDPI = 150,[int]$JpegQuality = 80)
     $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("pdfsplit_{0}" -f ([Guid]::NewGuid().ToString('N')))
     Ensure-Directory -Path $tempDir
     try {
@@ -838,7 +838,7 @@ function Split-PDFByThreshold {
                 Size = (Get-Item -LiteralPath $_).Length
             }
         })
-        $targetBudget = [Math]::Max(1, [int][Math]::Floor($Threshold * ($PDFSplitMarginPercent / 100.0)))
+        $targetBudget = [long][Math]::Max(1, [Math]::Floor($Threshold * ($PDFSplitMarginPercent / 100.0)))
         Write-Host "  $($pageInfos.Count) paginas | margen de division: $PDFSplitMarginPercent% | objetivo efectivo: $([Math]::Round($targetBudget / 1024, 1)) KB | umbral maximo: $([Math]::Round($Threshold / 1024, 1)) KB" -ForegroundColor Gray
         $outputFiles = @(); $part = 1; $start = 0
         while ($start -lt $pageInfos.Count) {
@@ -900,7 +900,7 @@ function Split-PDFByThreshold {
 }
 
 function Test-PDFRasterizationDecision {
-    param([string]$FilePath,[int]$OriginalSize,[int]$RenderDPI = 150,[int]$JpegQuality = 80)
+    param([string]$FilePath,[long]$OriginalSize,[int]$RenderDPI = 150,[int]$JpegQuality = 80)
     switch ($PdfMode) {
         'Skip' {
             return [PSCustomObject]@{
@@ -943,7 +943,7 @@ function Test-PDFRasterizationDecision {
 }
 
 function Handle-PDF {
-    param([string]$FilePath,[int]$Threshold = 1048576,[int]$RenderDPI = 150,[int]$JpegQuality = 80)
+    param([string]$FilePath,[long]$Threshold = 1048576,[int]$RenderDPI = 150,[int]$JpegQuality = 80)
     $originalSize = (Get-Item -LiteralPath $FilePath).Length
     if ($originalSize -le $Threshold) {
         Write-Host '  El PDF ya esta dentro del umbral. No se genera copia.' -ForegroundColor Green

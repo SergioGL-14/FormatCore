@@ -88,6 +88,17 @@ El proceso real es este:
 3. Con esas imagenes se reconstruye un PDF nuevo.
 4. Si aun supera el umbral, se intenta dividir en varias partes.
 
+La rasterizacion no tiene un limite fijo de megabytes para el PDF de entrada:
+depende de la memoria disponible, del numero de paginas y del tamano de cada
+pagina rasterizada. En esta implementacion la reconstruccion mantiene el PDF y
+los bytes JPEG en memoria antes de escribirlo, por lo que el limite practico de
+un PDF generado esta alrededor de 2 GB en Windows PowerShell 5.1. Un PDF o una
+pagina que se acerque a ese tamano puede fallar por memoria aunque el disco
+tenga espacio suficiente; no se considera un caso soportado. `Threshold` usa
+Int64 para que los tamanos y las decisiones de division no se desborden cerca
+de 2 GB, pero esto no aumenta el limite de rasterizacion de `System.Drawing` ni
+de `Windows.Data.Pdf`.
+
 `PDFSplitMarginPercent` si influye en el corte. Un valor mas bajo hace que el
 script meta menos paginas por parte para ir mas sobrado con el tamano final.
 
